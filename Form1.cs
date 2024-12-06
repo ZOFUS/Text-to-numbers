@@ -9,7 +9,7 @@ namespace Zadanie_1
     {
         private readonly Dictionary<string, int> unitsMap = new Dictionary<string, int>
         {
-            {"zéro", 0},
+            {"zero", 0},
             {"un", 1},
             {"une", 1},
             {"deux", 2},
@@ -20,6 +20,10 @@ namespace Zadanie_1
             {"sept", 7},
             {"huit", 8},
             {"neuf", 9},
+        };
+
+        Dictionary<string, int> specialTensMap = new Dictionary<string, int>
+        {
             {"dix", 10},
             {"onze", 11},
             {"douze", 12},
@@ -76,7 +80,7 @@ namespace Zadanie_1
             string[] words = input.Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
 
             int result = 0;
-            bool isValidInput = true;
+            string flag = "";
 
             for (int i = 0; i < words.Length; i++)
             {
@@ -92,22 +96,70 @@ namespace Zadanie_1
                     string twoWords = writtenWord + " " + words[i + 1];
                     if (hundredsMap.ContainsKey(twoWords))
                     {
-                        result += hundredsMap[twoWords];
-                        i++;
-                        continue;
+                        if (flag == "")
+                        {
+                            flag = "числа формата сотен";
+                            result += hundredsMap[twoWords];
+                            i++;
+                            continue;
+                        }
+                        else
+                        {
+                            MessageBox.Show($"{twoWords} не может быть после {words[i - 1]} \n(число формата сотен не может идти после {flag})");
+                            return;
+                        }
                     }
                 }
 
                 if (hundredsMap.ContainsKey(writtenWord))
                 {
-                    result += hundredsMap[writtenWord];
-                    continue;
+                    if (flag == "")
+                    {
+                        flag = "числа формата сотен";
+                        result += hundredsMap[writtenWord];
+                        continue;
+                    }
+                    else
+                    {
+                        MessageBox.Show($"{writtenWord} не может быть после {words[i - 1]} \n(число формата сотен не может идти после {flag})");
+                        return;
+                    }
+                }
+
+                if (specialTensMap.ContainsKey(writtenWord))
+                {
+                    if (flag == "" || flag == "числа формата сотен")
+                    {
+                        flag = "числа формата специальных десятков";
+                        result += specialTensMap[writtenWord];
+                        continue;
+                    }
+                    else
+                    {
+                        MessageBox.Show($"{writtenWord} не может быть после {words[i - 1]} \n(число формата десятков не может идти после {flag})");
+                        return;
+                    }
+                }
+
+                if (flag == "числа формата специальных десятков" && unitsMap.ContainsKey(writtenWord))
+                {
+                    MessageBox.Show($"{writtenWord} не может быть после {words[i - 1]} \n(число формата единиц не может идти после {flag}");
+                    return;
                 }
 
                 if (tensMap.ContainsKey(writtenWord))
                 {
-                    result += tensMap[writtenWord];
-                    continue;
+                    if (flag == "" || flag == "числа формата сотен")
+                    {
+                        flag = "числа десятичного формата";
+                        result += tensMap[writtenWord];
+                        continue;
+                    }
+                    else
+                    {
+                        MessageBox.Show($"{writtenWord} не может быть после {words[i - 1]} \n(число формата десятков не может идти после {flag})");
+                        return;
+                    }
                 }
 
                 if (writtenWord.Contains("-"))
@@ -115,119 +167,98 @@ namespace Zadanie_1
                     string[] hyphenParts = writtenWord.Split('-');
 
                     int temp = 0;
-                    bool wordValid = true;
-                    int j = 0;
-                    while (j < hyphenParts.Length)
+                    for (int j = 0; j < hyphenParts.Length; j++)
                     {
-                        if (j < hyphenParts.Length - 1)
+                        if (unitsMap.ContainsKey(hyphenParts[j]))
                         {
-                            string twoParts = hyphenParts[j] + "-" + hyphenParts[j + 1];
-                            if (tensMap.ContainsKey(twoParts))
-                            {
-                                temp += tensMap[twoParts];
-                                j += 2;
-                                continue;
-                            }
+                            temp += unitsMap[hyphenParts[j]];
                         }
-
-                        string singlePart = hyphenParts[j];
-                        if (unitsMap.ContainsKey(singlePart))
+                        else if (tensMap.ContainsKey(hyphenParts[j]))
                         {
-                            temp += unitsMap[singlePart];
-                        }
-                        else if (tensMap.ContainsKey(singlePart))
-                        {
-                            temp += tensMap[singlePart];
+                            temp += tensMap[hyphenParts[j]];
                         }
                         else
                         {
-                            MessageBox.Show($"Введённое вами слово \"{singlePart}\" не является числительным. Пожалуйста, проверьте ввод.");
-                            isValidInput = false;
-                            wordValid = false;
-                            break;
+                            MessageBox.Show($"{hyphenParts[j]} не входит в единицы, десятки или сотни. Пожалуйста, проверьте ввод.");
+                            return;
                         }
-                        j++;
                     }
 
-                    if (wordValid)
-                    {
-                        result += temp;
-                        continue;
-                    }
+                    result += temp;
+                    continue;
                 }
 
                 if (unitsMap.ContainsKey(writtenWord))
                 {
-                    result += unitsMap[writtenWord];
-                    continue;
+                    if (flag == "" || flag == "числа формата сотен" || flag == "числа десятичного формата" || flag == "числа от 10 до 19")
+                    {
+                        flag = "числа единичного формата";
+                        result += unitsMap[writtenWord];
+                        continue;
+                    }
+                    else
+                    {
+                        MessageBox.Show($"{writtenWord} не может быть после {words[i - 1]} \n(число единичного формата не может быть после {flag})");
+                        return;
+                    }
                 }
 
-                MessageBox.Show($"Введённое вами слово \"{writtenWord}\" не является числительным. Пожалуйста, проверьте ввод.");
-                isValidInput = false;
-                break;
+                MessageBox.Show($"{writtenWord} не входит в единицы, десятки или сотни. Пожалуйста, проверьте ввод.");
+                return;
             }
 
-            if (isValidInput)
-            {
-                resultLabel1.Text = result.ToString();
-            }
+            resultLabel1.Text = result.ToString();
         }
 
         private void button2_Click(object sender, EventArgs e)
-        {
-            if (string.IsNullOrWhiteSpace(inputText.Text) ||
-                string.IsNullOrWhiteSpace(left.Text) ||
-                string.IsNullOrWhiteSpace(right.Text))
             {
-                MessageBox.Show("Вы ввели не все значения. Пожалуйста, заполните все поля.");
-                return;
+                if (string.IsNullOrWhiteSpace(inputText.Text) ||
+                    string.IsNullOrWhiteSpace(left.Text) ||
+                    string.IsNullOrWhiteSpace(right.Text))
+                {
+                    MessageBox.Show("Вы ввели не все значения. Пожалуйста, заполните все поля.");
+                    return;
+                }
+
+                if (!(int.TryParse(left.Text, out int l) && int.TryParse(right.Text, out int r)))
+                {
+                    MessageBox.Show("Один или несколько введенных вами индексов не являются числами. Пожалуйста, введите корректные числа.");
+                    return;
+                }
+
+                string[] str = inputText.Text.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+
+                if (l < 1 || r < 1 || l > str.Length || r > str.Length || r < l)
+                {
+                    MessageBox.Show("Вы ввели некорректные значения. Убедитесь, что индексы находятся в пределах текста.");
+                    return;
+                }             
+
+                r--;
+                l--;
+
+                string answer = "";
+
+                for (int i = 0; i < l; i++)
+                {
+                    answer += str[i] + " ";
+                }
+
+                for (int i = r + 1; i < str.Length; i++)
+                {
+                    answer += str[i] + " ";
+                }
+
+                for (int i = l; i <= r; i++)
+                {
+                    answer += str[i] + " ";
+                }
+
+                resultLabel2.Text = answer.Trim();
             }
 
-            if (!(int.TryParse(left.Text, out int l) && int.TryParse(right.Text, out int r)))
+            private void Form1_Load(object sender, EventArgs e)
             {
-                MessageBox.Show("Один или несколько введенных вами индексов не являются числами. Пожалуйста, введите корректные числа.");
-                return;
             }
-
-            string[] str = inputText.Text.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
-
-            if (l < 1 || r < 1 || l > str.Length || r > str.Length || r < l)
-            {
-                MessageBox.Show("Вы ввели некорректные значения. Убедитесь, что индексы находятся в пределах текста.");
-                return;
-            }
-
-            if (l == r)
-            {
-                MessageBox.Show("Начальный и конечный индексы не могут быть одинаковыми.");
-                return;
-            }
-
-            r--;
-            l--;
-
-            string answer = "";
-
-            for (int i = 0; i < l; i++)
-            {
-                answer += str[i] + " ";
-            }
-
-            for (int i = r + 1; i < str.Length; i++)
-            {
-                answer += str[i] + " ";
-            }
-
-            for (int i = l; i <= r; i++)
-            {
-                answer += str[i] + " ";
-            }
-
-            resultLabel2.Text = answer.Trim();
-        }
-
-        private void Form1_Load(object sender, EventArgs e)
-        {
-        }
     }
 }
